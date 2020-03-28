@@ -1,5 +1,11 @@
-# image-pairs-stereo-capability
-Estimate the stereoscopic capability (B/H) of image pairs from the Pleiades and SPOT6-7 satellites
+# image-pairs-stereo-capacity
+Estimate the stereoscopic capacity (B/H) of image pairs from the Pleiades and SPOT6-7 satellites
+
+Very high resolution satellites, such as Pleiades and SPOT6-7, can acquire images in stereo or tri-stereo modes. Still, two monoscopic acquisitions can be combined to produce a digital surface model (DSM). howstereo.py can help you to choose the pairs of images that offer the best configuration in terms of stereoscopic capacity.
+
+Of course, you should also look at other parameters, such as the common footprint of your images, cloud and snow cover, the time difference between the two acquisitions (which induce changes between the two images and therefore potential correlation issues).
+
+For those agile satellites, the incidence angle, which is used to estimate the stereoscopic capacity of a pair of images (B/H ratio), is decomposed in the scan and ortho-scan directions (see the Pleiades and SPOT6-7 user guides for more details). For each acquisition, the scan and ortho-scan angles are provided in the Airbus archive catalog (http://www.intelligence-airbusds.com/geostore/).
 
 ### Usage:
 
