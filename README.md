@@ -30,3 +30,7 @@ Optional arguments:
 - Image 2 has an incidence of -28.34° in the scan direction, 15.28° in the ortho-scan direction and a scan azimuth of 24.34°
 
 `howstereo.py --incid1 -5.44 7.07 --az1 48.63 --incid2 -28.34 15.28 --az2 24.34 --show_plot`
+
+
+### Todo:
+Allow to input more than 2 images and calculate a B/H for each pair
