@@ -38,7 +38,7 @@ Optional arguments:
 
 #### Example 2:
 
-The information for each image is listed in images_list.txt:
+The information for each image is listed in image_list.txt:
 ```
 15,10,120
 -15,-10,120
@@ -46,6 +46,6 @@ The information for each image is listed in images_list.txt:
 -20,0,30
 ```
 
-`howstereo.py --input_file images_list.txt --show_plot`
+`howstereo.py --input_file image_list.txt --show_plot`
 
 <img src="https://github.com/IPGP/image-pairs-stereo-capacity/blob/master/Figure.jpg" alt="Interactive plot of the result (screen capture)" width=600>
