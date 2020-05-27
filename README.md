@@ -28,15 +28,15 @@ Optional arguments:
 
 ### Examples:
 
-Example 1:
+#### Example 1:
 
 - Image 1 has an incidence of -5.44° in the scan direction, 7.07° in the ortho-scan direction and a scan azimuth of 48.63°.
 
 - Image 2 has an incidence of -28.34° in the scan direction, 15.28° in the ortho-scan direction and a scan azimuth of 24.34°
 
-`howstereo.py --incid1 -5.44 7.07 --az1 48.63 --incid2 -28.34 15.28 --az2 24.34 --show_plot`
+`howstereo.py --incid1 -5.44 7.07 --az1 48.63 --incid2 -28.34 15.28 --az2 24.34`
 
-Example 2:
+#### Example 2:
 
 The image information is listed in images_list.txt:
 ```
