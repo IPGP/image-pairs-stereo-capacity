@@ -10,27 +10,42 @@ Of course, you should also look at other parameters for choosing the images, suc
 ### Usage:
 
 ```
-howstereo.py --incid1 scan ortho --az1 azimuth --incid2 scan ortho --az2 azimuth [-h] [--show_plot]
+howstereo.py --incid1 SCAN ORTHO --az1 AZIMUTH --incid2 SCAN ORTHO --az2 AZIMUTH [-h] [--input_file FILE] [--show_plot]
 ```
 Mandatory arguments:
 ```
---incid1 scan ortho  incidence angles for image 1 (in degrees)
---az1 azimuth        scan azimuth for image 1 (in degrees)
---incid2 scan ortho  incidence angles for image 2 (in degrees)
---az2 azimuth        scan azimuth for image 2 (in degrees)
+--incid1 SCAN ORTHO  incidence angles for image 1 (in degrees)
+--az1 AZIMUTH        scan azimuth for image 1 (in degrees)
+--incid2 SCAN ORTHO  incidence angles for image 2 (in degrees)
+--az2 AZIMUTH        scan azimuth for image 2 (in degrees)
 ```
 Optional arguments:
 ```
 -h, --help           show this help message and exit
+--input_file FILE    input from a file instead (in csv format: incid_scan,incid_ortho,az)
 --show_plot          show a 3D, interactive plot
 ```
 
-### Example:
+### Examples:
+
+#### Example 1:
+
 - Image 1 has an incidence of -5.44° in the scan direction, 7.07° in the ortho-scan direction and a scan azimuth of 48.63°.
+
 - Image 2 has an incidence of -28.34° in the scan direction, 15.28° in the ortho-scan direction and a scan azimuth of 24.34°
 
-`howstereo.py --incid1 -5.44 7.07 --az1 48.63 --incid2 -28.34 15.28 --az2 24.34 --show_plot`
+`howstereo.py --incid1 -5.44 7.07 --az1 48.63 --incid2 -28.34 15.28 --az2 24.34`
 
+#### Example 2:
 
-### Todo:
-Allow to input more than 2 images and calculate a B/H for each pair
+The image information is listed in images_list.txt:
+```
+15,10,120
+-15,-10,120
+20,0,30
+-20,0,30
+```
+
+`howstereo.py --input_file images_list.txt --show_plot`
+
+<img src="https://github.com/IPGP/image-pairs-stereo-capacity/blob/master/Figure.jpg" alt="Interactive plot of the result (screen capture)" width=600>
