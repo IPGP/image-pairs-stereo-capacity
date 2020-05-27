@@ -3,12 +3,13 @@
 
 import sys
 import argparse
-from math import radians, degrees, sin, cos, acos, tan, atan
+from math import radians, degrees, sin, cos, acos, tan
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from itertools import combinations
 
-# howstereo.py - Compute the B to H ratio of a couple of Pleiades or SPOT6|7
+# howstereo.py - Computes the B to H ratio of a couple of Pleiades or SPOT6|7
 # images
 # Copyright (C) 2020 Arthur Delorme
 #
@@ -26,153 +27,322 @@ from mpl_toolkits.mplot3d import Axes3D
 
 # (Contact: delorme@ipgp.fr)
 
+class Image(object):
+    """
+    Groups the parameters attached to an image
+    
+    A is a point on the look direction with OA = 1
+    
+    Input:
+        scan        [float] incidence angle in the Scan axis direction
+        ortho       [float] incidence angle in the OrthoScan axis direction
+        az          [float] azimuth of the Scan axis
+        s_comp      [float] coordinate of A on the Scan axis
+        o_comp      [float] coordinate of A on the OrthoScan axis
+        z_comp      [float] coordinate of A on the z axis
+        geo_n_comp  [float] coordinate of A on the North axis
+        geo_w_comp  [float] coordinate of A on the West axis
+        geo_z_comp  [float] coordinate of A on the z axis
+    """
+    
+    def __init__(self, name, scan, ortho, az,
+            s_comp=None, o_comp=None, z_comp=None,
+            geo_n_comp=None, geo_w_comp=None, geo_z_comp=None):
+        self._name = name
+        self._scan = scan
+        self._ortho = ortho
+        self._az = az
+        self._s_comp = s_comp
+        self._o_comp = o_comp
+        self._z_comp = z_comp
+        self._geo_n_comp = geo_n_comp
+        self._geo_w_comp = geo_w_comp
+        self._geo_z_comp = geo_z_comp
+    
+    @property
+    def name(self):
+        return self._name
+    
+    @property
+    def scan(self):
+        return self._scan
+    
+    @property
+    def ortho(self):
+        return self._ortho
+    
+    @property
+    def az(self):
+        return self._az
+    
+    @property
+    def s_comp(self):
+        return self._s_comp
+    @s_comp.setter
+    def s_comp(self, value):
+        self._s_comp = value
+    
+    @property
+    def o_comp(self):
+        return self._o_comp
+    @o_comp.setter
+    def o_comp(self, value):
+        self._o_comp = value
+    
+    @property
+    def z_comp(self):
+        return self._z_comp
+    @z_comp.setter
+    def z_comp(self, value):
+        self._z_comp = value
+    
+    @property
+    def geo_n_comp(self):
+        if not self._geo_n_comp:
+            self.compute_geo_coord()
+        return self._geo_n_comp
+    @geo_n_comp.setter
+    def geo_n_comp(self, value):
+        self._geo_n_comp = value
+    
+    @property
+    def geo_w_comp(self):
+        if not self._geo_n_comp:
+            self.compute_geo_coord()
+        return self._geo_w_comp
+    @geo_w_comp.setter
+    def geo_w_comp(self, value):
+        self._geo_w_comp = value
+    
+    @property
+    def geo_z_comp(self):
+        if not self._geo_n_comp:
+            self.compute_geo_coord()
+        return self._geo_z_comp
+    @geo_z_comp.setter
+    def geo_z_comp(self, value):
+        self._geo_z_comp = value
+    
+    def compute_geo_coord(self):
+        """
+        Computes the geographic coordinates of point A, if the required
+        variables (i.e. self._s_comp, self._o_comp, self._z_comp) have been set
+        """
+        
+        if self._s_comp is not None and self._o_comp is not None and \
+                self._z_comp is not None:
+            # We express A coordinates in the geographic reference through a
+            # rotation around the z axis (with a minus sign because the
+            # transformation goes in the opposite direction with respect to the
+            # azimuth)
+            rot_z = [[cos(-self._az), -sin(-self._az), 0],
+                     [sin(-self._az), cos(-self._az), 0],
+                     [0, 0, 1]]
+            self._geo_n_comp, self._geo_w_comp, self._geo_z_comp = np.dot(
+                    rot_z,
+                    [self._s_comp, self._o_comp, self._z_comp]
+                )
+
+def compute_b_to_h(im1, im2):
+    """
+    Computes the B/H ratio of a couple of images
+    
+    See the Figures 45 and 47 in the Pléiades Imagery User Guide.
+    See also the Figures 35, 36 and 37 in the SPOT 6 & SPOT 7 Imagery User
+    Guide.
+    The coordinate system is (O, Scan axis, OrthoScan axis, perpendicular to
+    the ground) -> (O, Scan, Ortho, z).
+    We define a point P on the look direction of the first acquisition with
+    OP = 1.
+    
+    s_comp          coordinate of P (or Q or P') on the Scan axis
+    o_comp          coordinate of P (or Q or P') on the OrthoScan axis
+    z_comp          coordinate of P (or Q or P') on the z axis
+    
+    Input:
+        im1         Image instance for the first image
+        im2         Image instance for the second image
+    
+    Returns:
+        stereo_angle
+        b_to_h
+    """
+    
+    # 1) We express P coordinates in the reference of the first acquisition
+    
+    im1.s_comp = cos(im1.ortho) * sin(im1.scan)
+    im1.o_comp = cos(im1.scan) * sin(im1.ortho)
+    im1.z_comp = cos(im1.ortho) * cos(im1.scan)
+    
+    # 2) We express P coordinates in the reference of the second acquisition
+    #    with a rotation around the z axis
+    
+    teta = im2.az - im1.az # Azimuth difference between the two acquisitions
+    
+    p = [im1.s_comp, im1.o_comp, im1.z_comp]
+    rot_z = [[cos(teta), -sin(teta), 0], [sin(teta), cos(teta), 0], [0, 0, 1]]
+    # rot_z: rotation around the z axis; a counterclockwise angle is positive
+    
+    p_prime = np.dot(rot_z, p)
+    
+    # We define a point Q on the look direction of the second acquisition
+    
+    # 3) We compute the scalar product of vectors OP' and OQ to get the stereo
+    #    angle and the B/H
+    
+    im2.s_comp = cos(im2.ortho) * sin(im2.scan)
+    im2.o_comp = cos(im2.scan) * sin(im2.ortho)
+    im2.z_comp = cos(im2.ortho) * cos(im2.scan)
+    
+    q = [im2.s_comp, im2.o_comp, im2.z_comp]
+    
+    # Scalar product:
+    # (1) vect(OP').vect(OQ) = dist(OP') * dist(OQ) * cos(alpha) = cos(alpha)
+    # (2) vect(OP').vect(OQ) = P'_s * Q_s + P'_o * Q_o + P'_z * Q_z
+    # (1)&(2) -> alpha = acos(P'_s * Q_s + P'_o * Q_o + P'_z * Q_z)
+    stereo_angle = acos(q[0] * p_prime[0] + q[1] * p_prime[1] + q[2] * \
+        p_prime[2])
+    half_angle = stereo_angle / 2.
+    b_to_h = tan(half_angle) * 2
+    
+    return [degrees(stereo_angle), b_to_h]
+
+def repeatForEach(elements, times):
+    """ From https://github.com/matplotlib/matplotlib/issues/8484 """
+    return [e for e in elements for _ in range(times)]
+
 print('''howstereo.py Copyright (C) 2020 Arthur Delorme
 This program comes with ABSOLUTELY NO WARRANTY.
-This is free software, and you are welcome to redistribute
-it under certain conditions.
+This is free software, and you are welcome to redistribute it under certain \
+conditions.
 See the GNU General Public License for more details.''')
 
 parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description='Compute the B to H ratio of a couple of Pleiades or SPOT6|7 images'
+        description='Computes the B to H ratio of a couple of Pleiades or \
+SPOT6|7 images'
     )
 parser.add_argument('--incid1', type=float, nargs=2,
-    metavar=('scan', 'ortho'),
+    metavar=('SCAN', 'ORTHO'),
     help="incidence angles for image 1 (in degrees)")
-parser.add_argument('--az1', type=float, metavar='azimuth',
+parser.add_argument('--az1', type=float, metavar='AZIMUTH',
     help="scan azimuth for image 1 (in degrees)")
 parser.add_argument('--incid2', type=float, nargs=2,
-    metavar=('scan', 'ortho'),
+    metavar=('SCAN', 'ORTHO'),
     help="incidence angles for image 2 (in degrees)")
-parser.add_argument('--az2', type=float, metavar='azimuth',
+parser.add_argument('--az2', type=float, metavar='AZIMUTH',
     help="scan azimuth for image 2 (in degrees)")
+parser.add_argument('--input_file', metavar='FILE',
+    help="input from a file instead (in csv format: incid_scan,incid_ortho,az)")
 parser.add_argument('--show_plot', action='store_true',
     help="show a 3D, interactive plot")
+if len(sys.argv) == 1: # https://stackoverflow.com/a/4042861/13433994
+    parser.print_help(sys.stderr)
+    sys.exit()
 
 args = parser.parse_args()
 
 # The convention used for the angles is: positive counterclockwise. Thus, some
 # of the angles need to be converted from CNES convention to this one.
 
-scan1, ortho1 = args.incid1
-scan1 = radians(scan1)
-ortho1 = -radians(ortho1) # Minus sign: conversion from the CNES convention to our
-scan2, ortho2 = args.incid2
-scan2 = radians(scan2)
-ortho2 = -radians(ortho2) # Minus sign: conversion from the CNES convention to our
-az1 = -radians(args.az1) # Minus sign: conversion from the CNES convention to our
-az2 = -radians(args.az2) # Minus sign: conversion from the CNES convention to our
 
-# See the Figures 45 and 47 in the Pléiades Imagery User Guide
-# See also the Figures 35, 36 and 37 in the SPOT 6 & SPOT 7 Imagery User Guide
-# The coordinate system is (O, Scan axis, OrthoScan axis, Normale to the ground)
-# -> (O, Scan, Ortho, z)
-# We define a point P on the look direction of the first acquisition with OP = 1
-# beta: incidence angle
-# i_s : incidence angle in the Scan axis direction
-# i_o : incidence angle in the Ortho axis direction
-# p_s : coordinate of P on the Scan axis
-# p_o : coordinate of P on the Ortho axis
-# p_z : coordinate of P on the z axis
-# 1) We express P's coordinates in the reference of the first acquisition
+# Read the input
 
-p_s = cos(ortho1) * sin(scan1)
-p_o = cos(scan1) * sin(ortho1)
-p_z = cos(ortho1) * cos(scan1)
+images = [] # A list of all the images
+if args.input_file:
+    with open(args.input_file) as f:
+        for i, l in enumerate(f):
+            scan, ortho, az = l.split(',')
+            scan = radians(float(scan))
+            ortho = -radians(float(ortho)) # Minus sign: conversion from the
+                                           # CNES convention to our
+            az = -radians(float(az))       # Same
+            images.append(Image('im{}'.format(i+1), scan, ortho, az))
+else:
+    if not (args.incid1 and args.az1 and args.incid2 and args.az2):
+        sys.exit("Error: missing arguments")
+    scan1, ortho1 = args.incid1
+    scan1 = radians(scan1)
+    ortho1 = -radians(ortho1) # Minus sign: conversion from the CNES convention
+                              # to our
+    az1 = -radians(args.az1)  # Same
+    
+    scan2, ortho2 = args.incid2
+    scan2 = radians(scan2)
+    ortho2 = -radians(ortho2) # Same
+    az2 = -radians(args.az2)  # Same
+    
+    images.extend([Image('im1', scan1, ortho1, az1),
+                   Image('im2', scan2, ortho2, az2)])
 
-# 2) We express P's coordinates in the reference of the second acquisition with
-#    a rotation around the z axis
 
-teta = az2 - az1 # Azimuth difference between the two acquisitions
-print('\nRotation: {:.1f}°\n'.format(-degrees(teta))) # Minus sign: conversion
-                                                      # from our convention to
-                                                      # the CNES convention
+# Compute the B/H
 
-p = [p_s, p_o, p_z]
-rot_z = [[cos(teta), -sin(teta), 0], [sin(teta), cos(teta), 0], [0, 0, 1]]
-# rot_z: rotation around the z axis; a counterclockwise angle is positive
+pairs = [] # A list of all possible pairs of images
+for p in list(combinations(images, 2)):
+    im1, im2 = p
+    stereo_angle, b_to_h = compute_b_to_h(im1, im2)
+    pairs.append({
+            'name': '{}-{}'.format(im1.name, im2.name),
+            'stereo_angle': stereo_angle,
+            'b_to_h': b_to_h
+        })
 
-p_prime = np.dot(rot_z, p)
+pairs = sorted(pairs, key=lambda k: k['b_to_h'])
 
-# We define a point Q on the look direction of the second acquisition
-# 3) We compute the scalar product of vectors OP' and OQ to get the angle and
-#    B/H
+print('pair\tb/h\tangle')
+for p in pairs:
+    print('{}\t{:.2f}\t{:.1f}°'.format(
+            p['name'], p['b_to_h'], p['stereo_angle']
+        ))
 
-q_s = cos(ortho2) * sin(scan2)
-q_o = cos(scan2) * sin(ortho2)
-q_z = cos(ortho2) * cos(scan2)
-
-q = [q_s, q_o, q_z]
-
-# Scalar product:
-# (1) vect(OP').vect(OQ) = dist(OP')*dist(OQ)*cos(alpha) = cos(alpha)
-# (2) vect(OP').vect(OQ) = P'x*Qx + P'y*Qy + P'z*Qz
-# (1) and (2) -> alpha = acos(P'x*Qx + P'y*Qy + P'z*Qz)
-stereo_angle = acos(q[0] * p_prime[0] + q[1] * p_prime[1] + q[2] * p_prime[2])
-half_angle = stereo_angle / 2.
-b_to_h = tan(half_angle) * 2
-
-scan1_prime = atan(p_prime[0]/p_prime[2])
-ortho1_prime = atan(p_prime[1]/p_prime[2])
-print('     Scan   OrthoScan')
-print('P : {:5.1f}° {:5.1f}°'.format(degrees(scan1), -degrees(ortho1)))
-print('P\': {:5.1f}° {:5.1f}°'.format(degrees(scan1_prime),
-    -degrees(ortho1_prime)))
-print('Q : {:5.1f}° {:5.1f}°'.format(degrees(scan2), -degrees(ortho2)))
-print('\nStereo angle: {:.1f}°'.format(degrees(stereo_angle)))
-print('-> B to H ratio: {:.3f}'.format(b_to_h))
-# (Minus signs for the OrthoScan angles: conversions from our convention to the
-# CNES convention)
 
 # 3D plot
 
 if not args.show_plot:
     sys.exit()
 
-# We express Q's and P''s coordinates in the geographic reference through a
-# rotation around the z axis, using the azimuth of the second acquisition as
-# the angle (with a minus sign because the transformation goes in the opposite
-# direction with respect to the azimuth)
+rays = np.zeros(shape=(len(images),6)) # Initialization; the rays to draw, one
+                                       # per image
+for i, im in enumerate(images):
+    rays[i] = [ 2*im.geo_n_comp,  2*im.geo_w_comp,  2*im.geo_z_comp,
+               -4*im.geo_n_comp, -4*im.geo_w_comp, -4*im.geo_z_comp]
 
-rot_z = [[cos(-az2), -sin(-az2), 0], [sin(-az2), cos(-az2), 0], [0, 0, 1]]
-q_north = np.dot(rot_z, q)
-p_prime_north = np.dot(rot_z, p_prime)
-
-q_north_n = q_north[0]
-q_north_w = q_north[1]
-q_north_z = q_north[2]
-p_prime_north_n = p_prime_north[0]
-p_prime_north_w = p_prime_north[1]
-p_prime_north_z = p_prime_north[2]
-
-rays = np.array([
-        [2*p_prime_north_n, 2*p_prime_north_w, 2*p_prime_north_z,
-            -4*p_prime_north_n, -4*p_prime_north_w, -4*p_prime_north_z],
-        [2*q_north_n, 2*q_north_w, 2*q_north_z,
-            -4*q_north_n, -4*q_north_w,-4*q_north_z]
-    ])
 north = np.array([[-1, 0, 0, 2, 0, 0]])
 
-color1 = (0,0,1)
-color2 = (1,0,0)
-color3 = (0,0,0)
+# Colors (from https://github.com/matplotlib/matplotlib/issues/8484)
+cmap = plt.get_cmap('rainbow')
+c = list(np.linspace(0, 1, num=len(images)))
+c = c + repeatForEach(c, 2)
+
 x_r, y_r, z_r, u_r, v_r, w_r = zip(*rays)
 x_n, y_n, z_n, u_n, v_n, w_n = zip(*north)
+
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
-ax.quiver3D(x_r, y_r, z_r, u_r, v_r, w_r, arrow_length_ratio=0.1,
-    colors=[color1, color2, color1, color1, color2, color2], linewidths=2)
-ax.quiver3D(x_n, y_n, z_n, u_n, v_n, w_n, colors=[color3], linewidths=1)
+
+ax.quiver(x_r, y_r, z_r, u_r, v_r, w_r, arrow_length_ratio=0.1, color=cmap(c),
+    linewidths=3)
+ax.quiver(x_n, y_n, z_n, u_n, v_n, w_n, colors=[0,0,0], linewidths=2)
 xx, yy = np.meshgrid(range(-2,3), range(-2,3))
+
 zz = np.array(5*[5*[0]])
 ax.plot_surface(xx, yy, zz, alpha=0.1)
-ax.text(1, 0, 0, 'N', 'x')
-ax.text(2*p_prime_north_n, 2*p_prime_north_w, 2*p_prime_north_z, 'I1', 'x')
-ax.text(2*q_north_n, 2*q_north_w, 2*q_north_z, 'I2', 'x')
-ax.set_xlim([-4, 4])
-ax.set_ylim([-4, 4])
-ax.set_zlim([-4, 4])
+
+ax.text(1, 0, 0, 'N', fontsize=30)
+for i, im in enumerate(images):
+    ax.text(2*im.geo_n_comp, 2*im.geo_w_comp, 2*im.geo_z_comp,
+        'i{}'.format(i+1), fontsize=20)
+
+lim = [-2.5, 2.5]
+ax.set_xlim(lim)
+ax.set_ylim(lim)
+ax.set_zlim(lim)
 ax.set_xlabel('North')
 ax.set_ylabel('West')
 ax.set_zlabel('Vertical')
+
+ax.view_init(elev=30., azim=-160)
+
+plt.tight_layout()
 plt.show()
