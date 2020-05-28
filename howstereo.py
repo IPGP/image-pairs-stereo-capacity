@@ -132,12 +132,10 @@ class Image(object):
         if self._s_comp is not None and self._o_comp is not None and \
                 self._z_comp is not None:
             # We express A coordinates in the geographic reference through a
-            # rotation around the z axis (with a minus sign because the
-            # transformation goes in the opposite direction with respect to the
-            # azimuth)
-            rot_z = [[cos(-self._az), -sin(-self._az), 0],
-                     [sin(-self._az), cos(-self._az), 0],
-                     [0, 0, 1]]
+            # rotation around the z axis
+            rot_z = [[cos(self._az),  sin(self._az), 0],
+                     [sin(self._az), -cos(self._az), 0],
+                     [            0,              0, 1]]
             self._geo_n_comp, self._geo_w_comp, self._geo_z_comp = np.dot(
                     rot_z,
                     [self._s_comp, self._o_comp, self._z_comp]
