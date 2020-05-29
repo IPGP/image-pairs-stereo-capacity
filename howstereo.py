@@ -240,6 +240,7 @@ if len(sys.argv) == 1: # https://stackoverflow.com/a/4042861/13433994
 
 args = parser.parse_args()
 
+
 # The convention used for the angles is: positive counterclockwise. Thus, some
 # of the angles need to be converted from CNES convention to this one.
 
@@ -322,8 +323,8 @@ ax = fig.add_subplot(111, projection='3d')
 ax.quiver(x_r, y_r, z_r, u_r, v_r, w_r, arrow_length_ratio=0.1, color=cmap(c),
     linewidths=3)
 ax.quiver(x_n, y_n, z_n, u_n, v_n, w_n, colors=[0,0,0], linewidths=2)
-xx, yy = np.meshgrid(range(-2,3), range(-2,3))
 
+xx, yy = np.meshgrid(range(-2,3), range(-2,3))
 zz = np.array(5*[5*[0]])
 ax.plot_surface(xx, yy, zz, alpha=0.1)
 
