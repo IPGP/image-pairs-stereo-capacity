@@ -36,6 +36,13 @@ Optional arguments:
 
 `howstereo.py --incid1 -5.44 7.07 --az1 48.63 --incid2 -28.34 15.28 --az2 24.34`
 
+Output:
+
+```
+pair	b/h	angle
+im1-im2	0.48	27.1°
+```
+
 #### Example 2:
 
 The information for each image is listed in image_list.txt:
