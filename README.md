@@ -48,4 +48,16 @@ The information for each image is listed in image_list.txt:
 
 `howstereo.py --input_file image_list.txt --show_plot`
 
+Output:
+
+```
+pair	b/h	angle
+im1-im3	0.32	18.0°
+im2-im4	0.32	18.0°
+im1-im4	0.60	33.2°
+im2-im3	0.60	33.2°
+im1-im2	0.64	35.7°
+im3-im4	0.73	40.0°
+```
+
 <img src="https://github.com/IPGP/image-pairs-stereo-capacity/blob/master/Figure.jpg" alt="Interactive plot of the result (screen capture)" width=600>
