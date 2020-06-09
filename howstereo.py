@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from itertools import combinations
 
-# howstereo.py - Computes the B to H ratio of a couple of Pleiades or SPOT6|7
+# howstereo.py - Computes the B to H ratio of pairs of Pleiades or SPOT6|7
 # images
 # Copyright (C) 2020 Arthur Delorme
 #
@@ -217,8 +217,8 @@ See the GNU General Public License for more details.''')
 
 parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description='Computes the B to H ratio of a couple of Pleiades or \
-SPOT6|7 images'
+        description='Computes the B to H ratio of pairs of Pleiades or SPOT6|7 \
+images'
     )
 parser.add_argument('--incid1', type=float, nargs=2,
     metavar=('SCAN', 'ORTHO'),
