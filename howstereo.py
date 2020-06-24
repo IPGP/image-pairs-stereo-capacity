@@ -29,7 +29,7 @@ from itertools import combinations
 
 class Image(object):
     """
-    Groups the parameters attached to an image
+    Regroup the parameters attached to an image
     
     A is a point on the look direction with OA = 1
     
@@ -132,13 +132,13 @@ class Image(object):
         if self._s_comp is not None and self._o_comp is not None and \
                 self._z_comp is not None:
             # We express A coordinates in the geographic reference through a
-            # rotation around the z axis
-            rot_z = [[cos(self._az),  sin(self._az), 0],
-                     [sin(self._az), -cos(self._az), 0],
+            # rotation of self._az around the z axis
+            rot_z = [[cos(self._az), -sin(self._az), 0],
+                     [sin(self._az),  cos(self._az), 0],
                      [            0,              0, 1]]
             self._geo_n_comp, self._geo_w_comp, self._geo_z_comp = np.dot(
                     rot_z,
-                    [self._s_comp, self._o_comp, self._z_comp]
+                    [self._s_comp, -self._o_comp, self._z_comp]
                 )
 
 def compute_b_to_h(im1, im2):
@@ -162,7 +162,7 @@ def compute_b_to_h(im1, im2):
         im2         Image instance for the second image
     
     Returns:
-        stereo_angle
+        stereo_angle (in degrees)
         b_to_h
     """
     
@@ -175,7 +175,7 @@ def compute_b_to_h(im1, im2):
     # 2) We express P coordinates in the reference of the second acquisition
     #    with a rotation around the z axis
     
-    teta = im2.az - im1.az # Azimuth difference between the two acquisitions
+    teta = im2.az - im1.az # Difference of azimuth between the two acquisitions
     
     p = [im1.s_comp, im1.o_comp, im1.z_comp]
     rot_z = [[cos(teta), -sin(teta), 0], [sin(teta), cos(teta), 0], [0, 0, 1]]
@@ -198,15 +198,18 @@ def compute_b_to_h(im1, im2):
     # (1) vect(OP').vect(OQ) = dist(OP') * dist(OQ) * cos(alpha) = cos(alpha)
     # (2) vect(OP').vect(OQ) = P'_s * Q_s + P'_o * Q_o + P'_z * Q_z
     # (1)&(2) -> alpha = acos(P'_s * Q_s + P'_o * Q_o + P'_z * Q_z)
-    stereo_angle = acos(q[0] * p_prime[0] + q[1] * p_prime[1] + q[2] * \
-        p_prime[2])
+    stereo_angle = acos(p_prime[0] * q[0]+ p_prime[1] * q[1] + p_prime[2] * \
+        q[2])
     half_angle = stereo_angle / 2.
     b_to_h = tan(half_angle) * 2
     
     return [degrees(stereo_angle), b_to_h]
 
 def repeatForEach(elements, times):
-    """ From https://github.com/matplotlib/matplotlib/issues/8484 """
+    """
+    From https://github.com/matplotlib/matplotlib/issues/8484
+    a more user-friendly way to specify color for each arrow in 3D quiver?
+    """
     return [e for e in elements for _ in range(times)]
 
 print('''howstereo.py Copyright (C) 2020 Arthur Delorme
