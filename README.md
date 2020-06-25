@@ -7,6 +7,8 @@ For those agile satellites, the incidence angle, which is used to calculate the 
 
 Of course, you should also look at other parameters for choosing the images, such as their common footprint, cloud and snow cover, the time difference between the two acquisitions (which induces changes between the two images and therefore potential correlation issues).
 
+*Thanks to Julien & Charlotte for the precious help!*
+
 ### Usage:
 
 ```
