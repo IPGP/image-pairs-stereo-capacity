@@ -133,12 +133,19 @@ class Image(object):
                 self._z_comp is not None:
             # We express A coordinates in the geographic reference through a
             # rotation of self._az around the z axis
-            rot_z = [[cos(self._az), -sin(self._az), 0],
-                     [sin(self._az),  cos(self._az), 0],
-                     [            0,              0, 1]]
+            rot_z = [[cos(self._az), -sin(self._az),       0],
+                     [sin(self._az),  cos(self._az),       0],
+                     [            0,              0,       1]]
+            
+            sym_z = [[1,  0,  0], # We also need to apply a symmetry with
+                     [0, -1,  0], # respect to the (N,Z) plane, because the
+                     [0,  0,  1]] # (O, N, E, Z) coordinate system is not direct
+            
+            sym_rot_z = np.dot(rot_z, sym_z)
+            
             self._geo_n_comp, self._geo_w_comp, self._geo_z_comp = np.dot(
-                    rot_z,
-                    [self._s_comp, -self._o_comp, self._z_comp]
+                    sym_rot_z,
+                    [self._s_comp, self._o_comp, self._z_comp]
                 )
 
 def compute_b_to_h(im1, im2):
@@ -150,8 +157,7 @@ def compute_b_to_h(im1, im2):
     Guide.
     The coordinate system is (O, Scan axis, OrthoScan axis, perpendicular to
     the ground) -> (O, Scan, Ortho, z).
-    We define a point P on the look direction of the first acquisition with
-    OP = 1.
+    P is a point on the look direction of the first acquisition with OP = 1.
     
     s_comp          coordinate of P (or Q or P') on the Scan axis
     o_comp          coordinate of P (or Q or P') on the OrthoScan axis
@@ -178,12 +184,13 @@ def compute_b_to_h(im1, im2):
     teta = im2.az - im1.az # Difference of azimuth between the two acquisitions
     
     p = [im1.s_comp, im1.o_comp, im1.z_comp]
-    rot_z = [[cos(teta), -sin(teta), 0], [sin(teta), cos(teta), 0], [0, 0, 1]]
-    # rot_z: rotation around the z axis; a counterclockwise angle is positive
+    rot_z = [[cos(teta), -sin(teta),         0], # Rotation around the z axis; a
+             [sin(teta),  cos(teta),         0], # counterclockwise angle is
+             [        0,          0,         1]] # positive
     
     p_prime = np.dot(rot_z, p)
     
-    # We define a point Q on the look direction of the second acquisition
+    # Q is a point on the look direction of the second acquisition
     
     # 3) We compute the scalar product of vectors OP' and OQ to get the stereo
     #    angle and the B/H
@@ -207,8 +214,8 @@ def compute_b_to_h(im1, im2):
 
 def repeatForEach(elements, times):
     """
-    From https://github.com/matplotlib/matplotlib/issues/8484
-    a more user-friendly way to specify color for each arrow in 3D quiver?
+    "a more user-friendly way to specify color for each arrow in 3D quiver?"
+    https://github.com/matplotlib/matplotlib/issues/8484
     """
     return [e for e in elements for _ in range(times)]
 
@@ -312,7 +319,7 @@ for i, im in enumerate(images):
 
 north = np.array([[-1, 0, 0, 2, 0, 0]])
 
-# Colors (from https://github.com/matplotlib/matplotlib/issues/8484)
+# Colors (https://github.com/matplotlib/matplotlib/issues/8484)
 cmap = plt.get_cmap('rainbow')
 c = list(np.linspace(0, 1, num=len(images)))
 c = c + repeatForEach(c, 2)
