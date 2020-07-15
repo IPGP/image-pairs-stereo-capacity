@@ -3,6 +3,7 @@
 
 import sys
 import argparse
+import textwrap
 from math import radians, degrees, sin, cos, acos, tan
 import numpy as np
 import matplotlib.pyplot as plt
@@ -219,16 +220,18 @@ def repeatForEach(elements, times):
     """
     return [e for e in elements for _ in range(times)]
 
-print('''howstereo.py Copyright (C) 2020 Arthur Delorme
-This program comes with ABSOLUTELY NO WARRANTY.
-This is free software, and you are welcome to redistribute it under certain \
-conditions.
-See the GNU General Public License for more details.''')
+print('howstereo.py Copyright (C) 2020 Arthur Delorme\n')
 
 parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description='Computes the B to H ratio of pairs of Pleiades or SPOT6|7 \
-images'
+        description=("Computes the B to H ratio of pairs of Pleiades or "
+            "SPOT6|7 images"),
+        epilog=textwrap.dedent('''
+                This program comes with ABSOLUTELY NO WARRANTY.
+                This is free software, and you are welcome to redistribute it
+                under certain conditions.
+                See the GNU General Public License for more details.
+            ''')
     )
 parser.add_argument('--incid1', type=float, nargs=2,
     metavar=('SCAN', 'ORTHO'),
