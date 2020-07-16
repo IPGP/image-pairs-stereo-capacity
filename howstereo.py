@@ -220,141 +220,144 @@ def repeatForEach(elements, times):
     """
     return [e for e in elements for _ in range(times)]
 
-print('howstereo.py Copyright (C) 2020 Arthur Delorme\n')
+if __name__ == "__main__":
+    print('howstereo.py Copyright (C) 2020 Arthur Delorme\n')
 
-parser = argparse.ArgumentParser(
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        description=("Computes the B to H ratio of pairs of Pleiades or "
-            "SPOT6|7 images"),
-        epilog=textwrap.dedent('''
-                This program comes with ABSOLUTELY NO WARRANTY.
-                This is free software, and you are welcome to redistribute it
-                under certain conditions.
-                See the GNU General Public License for more details.
-            ''')
-    )
-parser.add_argument('--incid1', type=float, nargs=2,
-    metavar=('SCAN', 'ORTHO'),
-    help="incidence angles for image 1 (in degrees)")
-parser.add_argument('--az1', type=float, metavar='AZIMUTH',
-    help="scan azimuth for image 1 (in degrees)")
-parser.add_argument('--incid2', type=float, nargs=2,
-    metavar=('SCAN', 'ORTHO'),
-    help="incidence angles for image 2 (in degrees)")
-parser.add_argument('--az2', type=float, metavar='AZIMUTH',
-    help="scan azimuth for image 2 (in degrees)")
-parser.add_argument('--input_file', metavar='FILE',
-    help="input from a file instead (in csv format: incid_scan,incid_ortho,az)")
-parser.add_argument('--show_plot', action='store_true',
-    help="show a 3D, interactive plot")
-if len(sys.argv) == 1: # https://stackoverflow.com/a/4042861/13433994
-    parser.print_help(sys.stderr)
-    sys.exit()
+    parser = argparse.ArgumentParser(
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            description=("Computes the B to H ratio of pairs of Pleiades or "
+                "SPOT6|7 images"),
+            epilog=textwrap.dedent('''
+                    This program comes with ABSOLUTELY NO WARRANTY.
+                    This is free software, and you are welcome to redistribute
+                    it under certain conditions.
+                    See the GNU General Public License for more details.
+                ''')
+        )
+    parser.add_argument('--incid1', type=float, nargs=2,
+        metavar=('SCAN', 'ORTHO'),
+        help="incidence angles for image 1 (in degrees)")
+    parser.add_argument('--az1', type=float, metavar='AZIMUTH',
+        help="scan azimuth for image 1 (in degrees)")
+    parser.add_argument('--incid2', type=float, nargs=2,
+        metavar=('SCAN', 'ORTHO'),
+        help="incidence angles for image 2 (in degrees)")
+    parser.add_argument('--az2', type=float, metavar='AZIMUTH',
+        help="scan azimuth for image 2 (in degrees)")
+    parser.add_argument('--input_file', metavar='FILE',
+            help=("input from a file instead (in csv format: "
+                  "incid_scan,incid_ortho,az)")
+        )
+    parser.add_argument('--show_plot', action='store_true',
+        help="show a 3D, interactive plot")
+    if len(sys.argv) == 1: # https://stackoverflow.com/a/4042861/13433994
+        parser.print_help(sys.stderr)
+        sys.exit()
 
-args = parser.parse_args()
-
-
-# The convention used for the angles is: positive counterclockwise. Thus, some
-# of the angles need to be converted from CNES convention to this one.
-
-
-# Read the input
-
-images = [] # A list of all the images
-if args.input_file:
-    with open(args.input_file) as f:
-        for i, l in enumerate(f):
-            scan, ortho, az = l.split(',')
-            scan = radians(float(scan))
-            ortho = -radians(float(ortho)) # Minus sign: conversion from the
-                                           # CNES convention to our
-            az = -radians(float(az))       # Same
-            images.append(Image('im{}'.format(i+1), scan, ortho, az))
-else:
-    if not (args.incid1 and args.az1 and args.incid2 and args.az2):
-        sys.exit("Error: missing arguments")
-    scan1, ortho1 = args.incid1
-    scan1 = radians(scan1)
-    ortho1 = -radians(ortho1) # Minus sign: conversion from the CNES convention
-                              # to our
-    az1 = -radians(args.az1)  # Same
-    
-    scan2, ortho2 = args.incid2
-    scan2 = radians(scan2)
-    ortho2 = -radians(ortho2) # Same
-    az2 = -radians(args.az2)  # Same
-    
-    images.extend([Image('im1', scan1, ortho1, az1),
-                   Image('im2', scan2, ortho2, az2)])
+    args = parser.parse_args()
 
 
-# Compute the B/H
-
-pairs = [] # A list of all possible pairs of images
-for p in list(combinations(images, 2)):
-    im1, im2 = p
-    stereo_angle, b_to_h = compute_b_to_h(im1, im2)
-    pairs.append({
-            'name': '{}-{}'.format(im1.name, im2.name),
-            'stereo_angle': stereo_angle,
-            'b_to_h': b_to_h
-        })
-
-pairs = sorted(pairs, key=lambda k: k['b_to_h'])
-
-print('pair\tb/h\tangle')
-for p in pairs:
-    print('{}\t{:.2f}\t{:.1f}°'.format(
-            p['name'], p['b_to_h'], p['stereo_angle']
-        ))
+    # The convention used for the angles is: positive counterclockwise. Thus,
+    # some of the angles need to be converted from CNES convention to this one.
 
 
-# 3D plot
+    # Read the input
 
-if not args.show_plot:
-    sys.exit()
+    images = [] # A list of all the images
+    if args.input_file:
+        with open(args.input_file) as f:
+            for i, l in enumerate(f):
+                scan, ortho, az = l.split(',')
+                scan = radians(float(scan))
+                ortho = -radians(float(ortho)) # Minus sign: conversion from the
+                                               # CNES convention to our
+                az = -radians(float(az))       # Same
+                images.append(Image('im{}'.format(i+1), scan, ortho, az))
+    else:
+        if not (args.incid1 and args.az1 and args.incid2 and args.az2):
+            sys.exit("Error: missing arguments")
+        scan1, ortho1 = args.incid1
+        scan1 = radians(scan1)
+        ortho1 = -radians(ortho1) # Minus sign: conversion from the CNES
+                                  # convention to our
+        az1 = -radians(args.az1)  # Same
+        
+        scan2, ortho2 = args.incid2
+        scan2 = radians(scan2)
+        ortho2 = -radians(ortho2) # Same
+        az2 = -radians(args.az2)  # Same
+        
+        images.extend([Image('im1', scan1, ortho1, az1),
+                       Image('im2', scan2, ortho2, az2)])
 
-rays = np.zeros(shape=(len(images),6)) # Initialization; the rays to draw, one
-                                       # per image
-for i, im in enumerate(images):
-    rays[i] = [ 2*im.geo_n_comp,  2*im.geo_w_comp,  2*im.geo_z_comp,
-               -4*im.geo_n_comp, -4*im.geo_w_comp, -4*im.geo_z_comp]
 
-north = np.array([[-1, 0, 0, 2, 0, 0]])
+    # Compute the B/H
 
-# Colors (https://github.com/matplotlib/matplotlib/issues/8484)
-cmap = plt.get_cmap('rainbow')
-c = list(np.linspace(0, 1, num=len(images)))
-c = c + repeatForEach(c, 2)
+    pairs = [] # A list of all possible pairs of images
+    for p in list(combinations(images, 2)):
+        im1, im2 = p
+        stereo_angle, b_to_h = compute_b_to_h(im1, im2)
+        pairs.append({
+                'name': '{}-{}'.format(im1.name, im2.name),
+                'stereo_angle': stereo_angle,
+                'b_to_h': b_to_h
+            })
 
-x_r, y_r, z_r, u_r, v_r, w_r = zip(*rays)
-x_n, y_n, z_n, u_n, v_n, w_n = zip(*north)
+    pairs = sorted(pairs, key=lambda k: k['b_to_h'])
 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
+    print('pair\tb/h\tangle')
+    for p in pairs:
+        print('{}\t{:.2f}\t{:.1f}°'.format(
+                p['name'], p['b_to_h'], p['stereo_angle']
+            ))
 
-ax.quiver(x_r, y_r, z_r, u_r, v_r, w_r, arrow_length_ratio=0.1, color=cmap(c),
-    linewidths=3)
-ax.quiver(x_n, y_n, z_n, u_n, v_n, w_n, colors=[0,0,0], linewidths=2)
 
-xx, yy = np.meshgrid(range(-2,3), range(-2,3))
-zz = np.array(5*[5*[0]])
-ax.plot_surface(xx, yy, zz, alpha=0.1)
+    # 3D plot
 
-ax.text(1, 0, 0, 'N', fontsize=30)
-for i, im in enumerate(images):
-    ax.text(2*im.geo_n_comp, 2*im.geo_w_comp, 2*im.geo_z_comp,
-        'i{}'.format(i+1), fontsize=20)
+    if not args.show_plot:
+        sys.exit()
 
-lim = [-2.5, 2.5]
-ax.set_xlim(lim)
-ax.set_ylim(lim)
-ax.set_zlim(lim)
-ax.set_xlabel('North')
-ax.set_ylabel('West')
-ax.set_zlabel('Vertical')
+    rays = np.zeros(shape=(len(images),6)) # Initialization; the rays to draw,
+                                           # one per image
+    for i, im in enumerate(images):
+        rays[i] = [ 2*im.geo_n_comp,  2*im.geo_w_comp,  2*im.geo_z_comp,
+                   -4*im.geo_n_comp, -4*im.geo_w_comp, -4*im.geo_z_comp]
 
-ax.view_init(elev=30., azim=-160)
+    north = np.array([[-1, 0, 0, 2, 0, 0]])
 
-plt.tight_layout()
-plt.show()
+    # Colors (https://github.com/matplotlib/matplotlib/issues/8484)
+    cmap = plt.get_cmap('rainbow')
+    c = list(np.linspace(0, 1, num=len(images)))
+    c = c + repeatForEach(c, 2)
+
+    x_r, y_r, z_r, u_r, v_r, w_r = zip(*rays)
+    x_n, y_n, z_n, u_n, v_n, w_n = zip(*north)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    ax.quiver(x_r, y_r, z_r, u_r, v_r, w_r, arrow_length_ratio=0.1,
+        color=cmap(c), linewidths=3)
+    ax.quiver(x_n, y_n, z_n, u_n, v_n, w_n, colors=[0,0,0], linewidths=2)
+
+    xx, yy = np.meshgrid(range(-2,3), range(-2,3))
+    zz = np.array(5*[5*[0]])
+    ax.plot_surface(xx, yy, zz, alpha=0.1)
+
+    ax.text(1, 0, 0, 'N', fontsize=30)
+    for i, im in enumerate(images):
+        ax.text(2*im.geo_n_comp, 2*im.geo_w_comp, 2*im.geo_z_comp,
+            'i{}'.format(i+1), fontsize=20)
+
+    lim = [-2.5, 2.5]
+    ax.set_xlim(lim)
+    ax.set_ylim(lim)
+    ax.set_zlim(lim)
+    ax.set_xlabel('North')
+    ax.set_ylabel('West')
+    ax.set_zlabel('Vertical')
+
+    ax.view_init(elev=30., azim=-160)
+
+    plt.tight_layout()
+    plt.show()
