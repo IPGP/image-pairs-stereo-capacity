@@ -12,31 +12,35 @@ Of course, you should also look at other parameters for choosing the images, suc
 ### Usage:
 
 ```
-howstereo.py --incid1 SCAN ORTHO --az1 AZIMUTH --incid2 SCAN ORTHO --az2 AZIMUTH [-h] [--input_file FILE] [--show_plot]
-```
-Mandatory arguments:
-```
---incid1 SCAN ORTHO  incidence angles for image 1 (in degrees)
---az1 AZIMUTH        scan azimuth for image 1 (in degrees)
---incid2 SCAN ORTHO  incidence angles for image 2 (in degrees)
---az2 AZIMUTH        scan azimuth for image 2 (in degrees)
+howstereo.py [-h] [--incid1 ALONG ACROSS] [--az1 AZIMUTH] [--incid2 ALONG ACROSS]
+             [--az2 AZIMUTH] [--az_mode {scan,target}] [--input_file FILE] [--show_plot]
 ```
 Optional arguments:
 ```
 -h, --help           show this help message and exit
---input_file FILE    input from a file instead (in csv format: incid_scan,incid_ortho,az)
+--inc1 ALONG ACROSS  incidence angles for image 1 (in degrees)
+--az1 AZIMUTH        azimuth angle for image 1 (in degrees)
+--inc2 ALONG ACROSS  incidence angles for image 2 (in degrees)
+--az2 AZIMUTH        azimuth angle for image 2 (in degrees)
+--az_mode {scan, target}
+                     type of azimuth angle (see the note below; default: scan)
+--input_file FILE    input from a file instead (in csv format: inc_scan,inc_ortho,az)
 --show_plot          show a 3D, interactive plot
 ```
+Note on azimuth angle:
+TL;DR: if the angle is from a SPOT6|7 DIMAP file, select "target" for --az-mode. Otherwise, select "scan" (default).
+
+The B/H is calculated using the azimuth of the scan axis (i.e. the angle between geographic north and the image line axis on the ground). In the Geostore, this angle corresponds to the Orientation angle. In the DIMAP file, for Pléiades, AZIMUTH_ANGLE also corresponds to this angle, but for SPOT6|7, AZIMUTH_ANGLE corresponds to the target azimuth. If you provide the target azimuth, you must select "target" for --az_mode, and the program will perform the conversion.
 
 ### Examples:
 
 #### Example 1:
 
-- Image 1 has an incidence of -5.44° in the scan direction, 7.07° in the ortho-scan direction and a scan azimuth of 48.63°.
+- Image 1 has an incidence of -5.44° in the scan direction, 7.07° in the ortho-scan direction and a scan azimuth of 48.63°
 
 - Image 2 has an incidence of -28.34° in the scan direction, 15.28° in the ortho-scan direction and a scan azimuth of 24.34°
 
-`howstereo.py --incid1 -5.44 7.07 --az1 48.63 --incid2 -28.34 15.28 --az2 24.34`
+`howstereo.py --inc1 -5.44 7.07 --az1 48.63 --inc2 -28.34 15.28 --az2 24.34`
 
 Output:
 
@@ -70,3 +74,35 @@ im3-im4	0.73	40.0°
 ```
 
 <img src="https://github.com/IPGP/image-pairs-stereo-capacity/blob/master/Figure.jpg" alt="Interactive plot of the result (screen capture)" width=600>
+
+#### Example 3:
+
+In this example we are comparing, for two SPOT6 images, the B/H found using the target azimuth found in the DIMAP files and the scan azimuth found in the GeoStore.
+
+- Image 1 has an incidence of -19.42° in the scan direction, -0.27° in the ortho-scan direction and a **target** azimuth of 2.11°
+
+- Image 2 has an incidence of 17.16° in the scan direction, -9.14° in the ortho-scan direction and a **target** azimuth of 203.79°
+
+`howstereo.py --inc1 -19.42 -0.27 --az1 2.11 --inc2 17.16 -9.14 --az2 203.79 --az_mode target`
+
+Output:
+
+```
+pair	b/h	angle
+im1-im2	0.69	38.0°
+```
+
+Which is equivalent to:
+
+- Image 1 has an incidence of -19.42° in the scan direction, -0.27° in the ortho-scan direction and a **scan** azimuth of 182.88°
+
+- Image 2 has an incidence of 17.16° in the scan direction, -9.14° in the ortho-scan direction and a **scan** azimuth of 176.27°
+
+`howstereo.py --inc1 -19.42 -0.27 --az1 182.88 --inc2 17.16 -9.14 --az2 176.27 --az_mode scan`
+
+Output:
+
+```
+pair	b/h	angle
+im1-im2	0.69	38.0°
+```

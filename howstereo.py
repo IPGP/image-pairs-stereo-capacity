@@ -4,7 +4,7 @@
 import sys
 import argparse
 import textwrap
-from math import radians, degrees, sin, cos, acos, tan
+from math import radians, degrees, sin, cos, acos, tan, atan2, pi
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -12,7 +12,7 @@ from itertools import combinations
 
 # howstereo.py - Computes the B to H ratio of pairs of Pleiades or SPOT6|7
 # images
-# Copyright (C) 2020 Arthur Delorme
+# Copyright (C) 2022 Arthur Delorme
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU General Public License as published by the Free Software
@@ -228,25 +228,39 @@ if __name__ == "__main__":
             description=("Computes the B to H ratio of pairs of Pleiades or "
                 "SPOT6|7 images"),
             epilog=textwrap.dedent('''
-                    This program comes with ABSOLUTELY NO WARRANTY.
-                    This is free software, and you are welcome to redistribute
-                    it under certain conditions.
-                    See the GNU General Public License for more details.
-                ''')
+Note on azimuth angle:
+    TL;DR: if the angle is from a SPOT6|7 DIMAP file, select "target" for --az-mode. Otherwise,
+    select "scan" (default).
+
+    The B/H is calculated using the azimuth of the scan axis (i.e. the angle between geographic
+    north and the image line axis on the ground). In the Geostore, this angle corresponds to
+    the Orientation angle. In the DIMAP file, for Pléiades, AZIMUTH_ANGLE also corresponds to
+    this angle, but for SPOT6|7, AZIMUTH_ANGLE corresponds to the target azimuth. If you
+    provide the target azimuth, you must select "target" for --az_mode, and the program will
+    perform the conversion.
+
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute
+it under certain conditions.
+See the GNU General Public License for more details.''')
         )
-    parser.add_argument('--incid1', type=float, nargs=2,
-        metavar=('SCAN', 'ORTHO'),
+    parser.add_argument('--inc1', type=float, nargs=2,
+        metavar=('ALONG', 'ACROSS'),
         help="incidence angles for image 1 (in degrees)")
     parser.add_argument('--az1', type=float, metavar='AZIMUTH',
-        help="scan azimuth for image 1 (in degrees)")
-    parser.add_argument('--incid2', type=float, nargs=2,
-        metavar=('SCAN', 'ORTHO'),
+        help="azimuth angle for image 1 (in degrees)")
+    parser.add_argument('--inc2', type=float, nargs=2,
+        metavar=('ALONG', 'ACROSS'),
         help="incidence angles for image 2 (in degrees)")
     parser.add_argument('--az2', type=float, metavar='AZIMUTH',
-        help="scan azimuth for image 2 (in degrees)")
+        help="azimuth angle for image 2 (in degrees)")
+    parser.add_argument('--az_mode', type=str, choices=['scan', 'target'],
+            default='scan', help=("type of azimuth angle (see the note below; "
+                "default: %(default)s)")
+        )
     parser.add_argument('--input_file', metavar='FILE',
             help=("input from a file instead (in csv format: "
-                  "incid_scan,incid_ortho,az)")
+                  "inc_along,inc_across,az)")
         )
     parser.add_argument('--show_plot', action='store_true',
         help="show a 3D, interactive plot")
@@ -269,24 +283,40 @@ if __name__ == "__main__":
             for i, l in enumerate(f):
                 scan, ortho, az = l.split(',')
                 scan = radians(float(scan))
-                ortho = -radians(float(ortho)) # Minus sign: conversion from the
-                                               # CNES convention to our
-                az = -radians(float(az))       # Same
+                ortho = radians(float(ortho))
+                az = radians(float(az))
+
+                if args.az_mode == 'target':
+                    az = (az + atan2(tan(ortho), tan(scan))) % (2 * pi)
+
+                # Minus sign: conversion from the CNES convention to our
+                ortho = -ortho
+                az = -az
+
                 images.append(Image('im{}'.format(i+1), scan, ortho, az))
     else:
-        if not (args.incid1 and args.az1 and args.incid2 and args.az2):
+        if not (args.inc1 and args.az1 and args.inc2 and args.az2):
             sys.exit("Error: missing arguments")
-        scan1, ortho1 = args.incid1
+        scan1, ortho1 = args.inc1
         scan1 = radians(scan1)
-        ortho1 = -radians(ortho1) # Minus sign: conversion from the CNES
-                                  # convention to our
-        az1 = -radians(args.az1)  # Same
-        
-        scan2, ortho2 = args.incid2
+        ortho1 = radians(ortho1)
+        az1 = radians(args.az1)
+
+        scan2, ortho2 = args.inc2
         scan2 = radians(scan2)
-        ortho2 = -radians(ortho2) # Same
-        az2 = -radians(args.az2)  # Same
-        
+        ortho2 = radians(ortho2)
+        az2 = radians(args.az2)
+
+        if args.az_mode == 'target':
+            az1 = (az1 + atan2(tan(ortho1), tan(scan1))) % (2 * pi)
+            az2 = (az2 + atan2(tan(ortho2), tan(scan2))) % (2 * pi)
+
+        # Minus sign: conversion from the CNES convention to our
+        ortho1 = -ortho1 
+        az1 = -az1
+        ortho2 = -ortho2
+        az2 = -az2
+
         images.extend([Image('im1', scan1, ortho1, az1),
                        Image('im2', scan2, ortho2, az2)])
 
