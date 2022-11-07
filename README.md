@@ -28,9 +28,10 @@ Optional arguments:
 --show_plot          show a 3D, interactive plot
 ```
 Note on azimuth angle:
-TL;DR: if the angle is from a SPOT6|7 DIMAP file, select "target" for --az-mode. Otherwise, select "scan" (default).
 
-The B/H is calculated using the azimuth of the scan axis (i.e. the angle between geographic north and the image line axis on the ground). In the Geostore, this angle corresponds to the Orientation angle. In the DIMAP file, for Pléiades, AZIMUTH_ANGLE also corresponds to this angle, but for SPOT6|7, AZIMUTH_ANGLE corresponds to the target azimuth. If you provide the target azimuth, you must select "target" for --az_mode, and the program will perform the conversion.
+> TL;DR: if the angle is from a SPOT6|7 DIMAP file, select "target" for --az-mode. Otherwise, select "scan" (default).
+> 
+> The B/H is calculated using the azimuth of the scan axis (i.e. the angle between geographic north and the image line axis on the ground). In the Geostore, this angle corresponds to the Orientation angle. In the DIMAP file, for Pléiades, AZIMUTH_ANGLE also corresponds to this angle, but for SPOT6|7, AZIMUTH_ANGLE corresponds to the target azimuth. If you provide the target azimuth, you must select "target" for --az_mode, and the program will perform the conversion.
 
 ### Examples:
 
@@ -73,7 +74,7 @@ im1-im2	0.64	35.7°
 im3-im4	0.73	40.0°
 ```
 
-<img src="https://github.com/IPGP/image-pairs-stereo-capacity/blob/master/Figure.jpg" alt="Interactive plot of the result (screen capture)" width=600>
+<img src="https://github.com/IPGP/image-pairs-stereo-capacity/blob/master/Figure.jpg" alt="Interactive plot of the result (screen capture)" width=400>
 
 #### Example 3:
 
