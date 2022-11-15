@@ -78,7 +78,7 @@ im3-im4	0.73	40.0°
 
 #### Example 3:
 
-In this example we are comparing, for two SPOT6 images, the B/H found using the target azimuth from the DIMAP files and the scan azimuth from the GeoStore.
+In this example we are comparing, for two SPOT6 images, the B/H found using 1) the target azimuth from the DIMAP files and 2) the scan azimuth from the GeoStore.
 
 - Image 1 has an incidence of -19.42° in the scan direction, -0.27° in the ortho-scan direction and a **target** azimuth of 2.11°
 
