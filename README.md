@@ -29,7 +29,7 @@ Optional arguments:
 ```
 Note on azimuth angle:
 
-> TL;DR: if the angle is from a SPOT6|7 DIMAP file, select "target" for --az-mode. Otherwise, select "scan" (default).
+> TL;DR: if the angle is from a SPOT6|7 DIMAP file, select "target" for --az_mode. Otherwise, select "scan" (default).
 > 
 > The B/H is calculated using the azimuth of the scan axis (i.e. the angle between geographic north and the image line axis on the ground). In the Geostore, this angle corresponds to the Orientation angle. In the DIMAP file, for Pléiades, AZIMUTH_ANGLE also corresponds to this angle, but for SPOT6|7, AZIMUTH_ANGLE corresponds to the target azimuth. If you provide the target azimuth, you must select "target" for --az_mode, and the program will perform the conversion.
 
