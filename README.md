@@ -1,9 +1,9 @@
 # image-pairs-stereo-capacity
-Estimate the stereoscopic capacity (B/H ratio) of pairs of images from the Pleiades or SPOT6-7 satellites
+Estimate the stereoscopic capacity (B/H ratio) of pairs of images from the Pléiades, Pléiades Neo or SPOT6-7 satellites
 
-Very high resolution satellites, such as Pleiades and SPOT6-7, can acquire images in stereo or tri-stereo modes. Still, two monoscopic acquisitions can be combined to produce a digital surface model (DSM). howstereo.py can help you to choose which pair of images offers the best configuration in terms of stereoscopic capacity.
+Very high resolution satellites, such as Pléiades and SPOT6-7, can acquire images in stereo or tri-stereo modes. Still, two monoscopic acquisitions can be combined to produce a digital surface model (DSM). howstereo.py can help you to choose which pair of images offers the best configuration in terms of stereoscopic capacity.
 
-For those agile satellites, the incidence angle, which is used to calculate the B/H ratio, is decomposed in the scan and ortho-scan directions (see the Pleiades and SPOT6-7 user guides for more details). For each acquisition, the scan, ortho-scan and scan azimuth angles are provided in the Airbus archive catalog (http://www.intelligence-airbusds.com/geostore/).
+For those agile satellites, the incidence angle, which is used to calculate the B/H ratio, is decomposed in the scan and ortho-scan directions (see the Pléiades and SPOT6-7 user guides for more details). For each acquisition, the scan, ortho-scan and scan azimuth angles are provided in the Airbus archive catalog (http://www.intelligence-airbusds.com/geostore/).
 
 Of course, you should also look at other parameters for choosing the images, such as their common footprint, cloud and snow cover, the time difference between the two acquisitions (which induces changes between the two images and therefore potential correlation issues).
 
@@ -31,7 +31,7 @@ Note on azimuth angle:
 
 > TL;DR: if the angle is from a SPOT6|7 DIMAP file, select "target" for --az_mode. Otherwise, select "scan" (default).
 > 
-> The azimuth of the scan axis (i.e. the angle between geographic north and the image line axis on the ground) is used in the B/H calculation. In the Geostore, this angle is called the Orientation angle. In the DIMAP file, for Pléiades, it corresponds to the AZIMUTH_ANGLE, but, for SPOT6|7, the AZIMUTH_ANGLE refers to the target azimuth. If you provide the target azimuth as input, you must select "target" for --az_mode, and the program will perform the conversion. Otherwise, select "scan".
+> The azimuth of the scan axis (i.e. the angle between geographic north and the image line axis on the ground) is used in the B/H calculation. In the Geostore, this angle is called the Orientation angle. In the DIMAP file, for Pléiades, it corresponds to the AZIMUTH_ANGLE, but for SPOT6|7, the AZIMUTH_ANGLE refers to the target azimuth. For Pléiades Neo, it corresponds to the IMAGE_ORIENTATION. If you provide the target azimuth as input, you must select "target" for --az_mode, and the program will perform the conversion. Otherwise, select "scan".
 
 ### Examples:
 
